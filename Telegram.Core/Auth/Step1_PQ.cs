@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Telegram.Core.MTProto;
+using Telegram.Core.MTProto.Crypto;
 
 namespace Telegram.Core.Auth
 {
@@ -42,14 +43,14 @@ namespace Telegram.Core.Auth
                     var responseCode = binaryReader.ReadInt32();
                     if (responseCode != responseConstructorNumber)
                     {
-                        throw new InvalidOperationException($"invalid response code: {responseCode}");
+                        throw new InvalidOperationException($"Invalid response code: {responseCode}");
                     }
 
                     var nonceFromServer = binaryReader.ReadBytes(16);
 
                     if (!nonceFromServer.SequenceEqual(nonce))
                     {
-                        throw new InvalidOperationException("invalid nonce from server");
+                        throw new InvalidOperationException("Invalid nonce from server");
                     }
 
                     var serverNonce = binaryReader.ReadBytes(16);
@@ -57,9 +58,9 @@ namespace Telegram.Core.Auth
                     byte[] pqbytes = Serializers.Bytes.Read(binaryReader); //Single-byte prefix denoting length, an 8-byte string, and three bytes of padding
                     //pqbytes.length == 8
                     if (pqbytes.Length != 8)
-                        throw new InvalidOperationException("invalid prefix or padding while evaluating pq value");
+                        throw new InvalidOperationException("Invalid prefix or padding while evaluating pq value");
 
-                    long pq = BitConverter.ToInt64(pqbytes.Reverse().ToArray(), 0);
+                    var pq = new BigInteger(1, pqbytes);
 
                     var vectorId = binaryReader.ReadInt32();
 
@@ -93,7 +94,7 @@ namespace Telegram.Core.Auth
     {
         public byte[] Nonce { get; set; }
         public byte[] ServerNonce { get; set; }
-        public long PQ { get; set; }
+        public BigInteger PQ { get; set; }
         public List<byte[]> Fingerprints { get; set; }
     }
 }
