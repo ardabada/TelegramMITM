@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Telegram.Core.MTProto
 {
@@ -67,6 +68,21 @@ namespace Telegram.Core.MTProto
                 }
 
                 return binaryWriter;
+            }
+        }
+
+
+        internal static class String
+        {
+            public static string Read(BinaryReader reader)
+            {
+                byte[] data = Bytes.Read(reader);
+                return Encoding.UTF8.GetString(data, 0, data.Length);
+            }
+
+            public static BinaryWriter Write(BinaryWriter writer, string str)
+            {
+                return Bytes.Write(writer, Encoding.UTF8.GetBytes(str));
             }
         }
     }

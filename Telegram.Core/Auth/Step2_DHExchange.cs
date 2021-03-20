@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Telegram.Core.MTProto;
 using Telegram.Core.MTProto.Crypto;
@@ -80,6 +81,47 @@ namespace Telegram.Core.Auth
                     }
                 }
                 return reqDhParamsBytes;
+            }
+        }
+
+        public DHExchangeResponse FromBytes(byte[] response, byte[] step1_nonce = null, byte[] step2_serverNonce = null)
+        {
+            using (MemoryStream responseStream = new MemoryStream(response, false))
+            {
+                using (BinaryReader responseReader = new BinaryReader(responseStream))
+                {
+                    uint responseCode = responseReader.ReadUInt32();
+
+                    if (responseCode == 0x79cb045d)
+                    {
+                        //TODO: server_DH_params_fail
+                        //use new_nonce_hash
+                        throw new InvalidOperationException("server_DH_params_fail");
+                    }
+
+                    if (responseCode != 0xd0e8075c)
+                        throw new InvalidOperationException($"Invalid response code: {responseCode}");
+
+                    byte[] nonce = responseReader.ReadBytes(16);
+
+                    if (step1_nonce != null && !nonce.SequenceEqual(step1_nonce))
+                        throw new InvalidOperationException("Invalid nonce");
+
+
+                    byte[] serverNonce = responseReader.ReadBytes(16);
+                    if (step2_serverNonce != null && !serverNonce.SequenceEqual(step2_serverNonce))
+                        throw new InvalidOperationException("Invalid server nonce");
+
+                    var encryptedAnswer = Serializers.Bytes.Read(responseReader);
+
+                    return new DHExchangeResponse()
+                    {
+                        EncryptedAnswer = encryptedAnswer,
+                        ServerNonce = serverNonce,
+                        Nonce = nonce,
+                        NewNonce = newNonce
+                    };
+                }
             }
         }
 	}

@@ -5,9 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Network\**" />
-    <EmbeddedResource Remove="Network\**" />
-    <None Remove="Network\**" />
+    <ProjectReference Include="..\TeleSharp.TL\TeleSharp.TL.csproj" />
   </ItemGroup>
 
 </Project>
